@@ -1,58 +1,57 @@
-# Java and Kubernetes
+# Java & Kubernetes
 
-Show how you can move your spring boot application to docker and kubernetes.
-This project is a demo for the series of posts on dev.to
-https://dev.to/sandrogiacom/kubernetes-for-java-developers-setup-41nk
+Construir um ambiente Kubernetes local para que possamos aprender a tecnologia sem medo de errar. Vamos criar os recursos necessários para fazer o deploy no cluster e configurar nossa aplicação a fim de fazer debug enquanto ela está rodando no Kubernetes
 
-## Part one - base app:
+## Parte 1 - app básico:
 
 ### Requirements:
 
-**Docker and Make (Optional)**
+**Docker & Make (Opcional)**
 
-**Java 15**
+**Java 16**
+### Ferramenas utilizadas:
+ + Minikube
+ + Kubernetes
+ + Docker
+ + IDE de sua preferência
 
-Help to install tools:
+### Build e execução:
 
-https://github.com/sandrogiacom/k8s
+Aplicação Spring Boot e MySQL rodando em Docker
 
-### Build and run application:
-
-Spring boot and mysql database running on docker
-
-**Clone from repository**
+**Clonar o repositório**
 ```bash
-git clone https://github.com/sandrogiacom/java-kubernetes.git
+git clone https://github.com/eduardolm/java-kubernetes.git
 ```
 
-**Build application**
+**Build da aplicação**
 ```bash
 cd java-kubernetes
 mvn clean install
 ```
 
-**Start the database**
+**Executar o banco de dados em Docker container**
 ```bash
 make run-db
 ```
 
-**Run application**
+**Executar a aplicação**
 ```bash
 java --enable-preview -jar target/java-kubernetes.jar
 ```
 
-**Check**
+**Testes**
 
 http://localhost:8080/app/users
 
 http://localhost:8080/app/hello
 
-## Part two - app on Docker:
+## Parte 2 - Execução do app em Docker:
 
-Create a Dockerfile:
+Criar um Dockerfile:
 
 ```yaml
-FROM openjdk:15-alpine
+FROM openjdk:16-alpine
 RUN mkdir /usr/myapp
 COPY target/java-kubernetes.jar /usr/myapp/app.jar
 WORKDIR /usr/myapp
@@ -60,62 +59,64 @@ EXPOSE 8080
 ENTRYPOINT [ "sh", "-c", "java --enable-preview $JAVA_OPTS -jar app.jar" ]
 ```
 
-**Build application and docker image**
+**Build da aplicação e da imagem Docker**
 
 ```bash
 make build
 ```
 
-Create and run the database
+Executar o banco de dados
 ```bash
 make run-db
 ```
 
-Create and run the application
+Executar a aplicação
 ```bash
 make run-app
 ```
 
-**Check**
+**Testes**
 
 http://localhost:8080/app/users
 
 http://localhost:8080/app/hello
 
-Stop all:
+Encerrar a execução:
 
 `
-docker stop mysql57 myapp
+docker stop mysql myapp
 `
 
-## Part three - app on Kubernetes:
+## Parte 3 - Rodando o app em Kubernetes:
 
-We have an application and image running in docker
-Now, we deploy application in a kubernetes cluster running in our machine
+Temos uma aplicação e sua imagem Docker. Agora faremos o deploy da aplicação 
+num cluster Kubernetes sendo executado localmente.
 
-Prepare
 
-### Start minikube
+Preparação para o deploy
+
+### Executar Minikube
 `
 make k-setup
 `
- start minikube, enable ingress and create namespace dev-to
+ Executar minikube, habilitar ingress, metrics-server e criar um namespace no cluster Kubernetes
 
-### Check IP
+### Verificar o IP
 
 `
 minikube -p dev.to ip
 `
 
-### Minikube dashboard
+### Dashboard Minikube
+Interface gráfica, acessada pelo navegador que permite interagir de forma mais simples com o Kuberntes.
 
 `
 minikube -p dev.to dashboard
 `
 
-### Deploy database
+### Deploy do banco de dados
 
-create mysql deployment and service
+Criar o deploy do MySQL e o respectivo serviço
 
 `
 make k-deploy-db
@@ -125,7 +126,7 @@ make k-deploy-db
 kubectl get pods -n dev-to
 `
 
-OR
+OU
 
 `
 watch k get pods -n dev-to
@@ -140,39 +141,39 @@ kubectl logs -n dev-to -f <pod_name>
 kubectl port-forward -n dev-to <pod_name> 3306:3306
 `
 
-## Build application and deploy
+## Build e deploy da aplicação
 
-build app
+build da aplicação
 
 `
 make k-build-app
 ` 
 
-create docker image inside minikube machine:
+Criando uma imagem docker dentro da máquina Minikube:
 
 `
 make k-build-image
 `
 
-OR
+OU
 
 `
 make k-cache-image
 `  
 
-create app deployment and service:
+criar o deploy e serviço da aplicação:
 
 `
 make k-deploy-app
 ` 
 
-**Check**
+**Testar**
 
 `
 kubectl get services -n dev-to
 `
 
-To access app:
+Para acessar a aplicação:
 
 `
 minikube -p dev.to service -n dev-to myapp --url
@@ -183,7 +184,7 @@ Ex:
 http://172.17.0.3:32594/app/users
 http://172.17.0.3:32594/app/hello
 
-## Check pods
+## Varificar os pods
 
 `
 kubectl get pods -n dev-to
@@ -193,14 +194,14 @@ kubectl get pods -n dev-to
 kubectl -n dev-to logs myapp-6ccb69fcbc-rqkpx
 `
 
-## Map to dev.local
+## Mapeando para dev.local
 
 get minikube IP
 `
 minikube -p dev.to ip
 ` 
 
-Edit `hosts` 
+Editando o `hosts` 
 
 `
 sudo vim /etc/hosts
@@ -211,7 +212,7 @@ Replicas
 kubectl get rs -n dev-to
 `
 
-Get and Delete pod
+Listando e excluindo pods
 `
 kubectl get pods -n dev-to
 `
@@ -220,12 +221,12 @@ kubectl get pods -n dev-to
 kubectl delete pod -n dev-to myapp-f6774f497-82w4r
 `
 
-Scale
+Escalando
 `
 kubectl -n dev-to scale deployment/myapp --replicas=2
 `
 
-Test replicas
+Testando as répplicas
 `
 while true
 do curl "http://dev.local/app/hello"
@@ -233,7 +234,7 @@ echo
 sleep 2
 done
 `
-Test replicas with wait
+Testando as réplicas e aguardando
 
 `
 while true
@@ -245,13 +246,13 @@ done
 ## Check app url
 `minikube -p dev.to service -n dev-to myapp --url`
 
-Change your IP and PORT as you need it
+Modifique seu IP e PORTA conforme necessário
 
 `
 curl -X GET http://dev.local/app/users
 `
 
-Add new User
+Adicionando um novo usuário
 `
 curl --location --request POST 'http://dev.local/app/users' \
 --header 'Content-Type: application/json' \
@@ -261,11 +262,12 @@ curl --location --request POST 'http://dev.local/app/users' \
 }'
 `
 
-## Part four - debug app:
+## Parte 4 - depurando a aplicação:
 
-add   JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n"
+Descomentar `JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n"`
+no arquivo localizado em `k8s/app/app-configmap.yml`
  
-change CMD to ENTRYPOINT on Dockerfile
+alterar o CMD para o ENTRYPOINT no Dockerfile
 
 `
 kubectl get pods -n=dev-to
@@ -275,7 +277,7 @@ kubectl get pods -n=dev-to
 kubectl port-forward -n=dev-to <pod_name> 5005:5005
 `
 
-## KubeNs and Stern
+## KubeNs e Stern
 
 `
 kubens dev-to
@@ -285,18 +287,18 @@ kubens dev-to
 stern myapp
 ` 
 
-## Start all
+## Executar todos os serviços
 
 `make k:all`
 
 
-## References
+## Referências
 
 https://kubernetes.io/docs/home/
 
 https://minikube.sigs.k8s.io/docs/
 
-## Useful commands
+## Comandos úteis
 
 ```
 ##List profiles
